@@ -6,6 +6,7 @@ plugins {
     id 'com.jfrog.bintray' version '1.6'
     id 'pl.allegro.tech.build.axion-release' version '1.3.4'
     id 'com.github.johnrengelman.shadow' version '1.2.3'
+    id "com.jfrog.artifactory" version "4.4.0"
 }
 
 scmVersion {
@@ -15,7 +16,7 @@ scmVersion {
 }
 
 group = 'uk.sky'
-version = scmVersion.version
+version = '3.0.0'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
@@ -31,23 +32,23 @@ clean.doFirst {
     delete "${projectDir}/target"
 }
 
-bintray {
-    user = project.property('openSourceRepoUser')
-    key = project.property('openSourceRepoPass')
-    publications = ['artifacts']
-    pkg {
-        userOrg = 'sky-uk'
-        repo = 'oss-maven'
-        name = project.name
-        licenses = ['BSD 3-Clause']
-        vcsUrl = 'https://github.com/sky-uk/cqlmigrate.git'
-        version {
-            name = scmVersion.version
-            released = new Date()
-            vcsTag = scmVersion.version
-        }
-    }
-}
+//bintray {
+//    user = project.property('openSourceRepoUser')
+//    key = project.property('openSourceRepoPass')
+//    publications = ['artifacts']
+//    pkg {
+//        userOrg = 'sky-uk'
+//        repo = 'oss-maven'
+//        name = project.name
+//        licenses = ['BSD 3-Clause']
+//        vcsUrl = 'https://github.com/sky-uk/cqlmigrate.git'
+//        version {
+//            name = scmVersion.version
+//            released = new Date()
+//            vcsTag = scmVersion.version
+//        }
+//    }
+//}
 
 publishing {
     publications {
@@ -111,9 +112,9 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
     from javadoc.destinationDir
 }
 
-task testJar (type: Jar) {
+task testJar(type: Jar) {
     classifier = 'tests'
-    from (sourceSets.main.output, sourceSets.test.output)
+    from(sourceSets.main.output, sourceSets.test.output)
     from {
         (configurations.runtime + configurations.functional).collect {
             it.isDirectory() ? it : zipTree(it)
@@ -131,14 +132,14 @@ jar {
 }
 
 // Functional test is to run the migrateSchema on a jar containing embedded CQL files and have it return successfully.
-task functional (dependsOn: ['testJar']) << {
+task functional(dependsOn: ['testJar']) << {
     exec {
         executable = 'java'
         args = ['-jar', testJar.archivePath, 'migrateSchema']
     }
 }
 
-task functional3 (dependsOn: ['testJar']) << {
+task functional3(dependsOn: ['testJar']) << {
     exec {
         executable = 'java'
         args = ['-jar', testJar.archivePath, 'migrateSchema']
@@ -149,4 +150,46 @@ check.dependsOn(functional)
 
 test {
     jvmArgs '-Dcassandra.storagedir=/tmp/cassandra'
+}
+
+artifactory {
+    contextUrl = 'http://repo.sns.sky.com:8081/artifactory'
+    //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the publisher
+        //A closure defining publishing information
+        repository {
+            repoKey = 'libs-releases-local'   //The Artifactory repository key to publish to
+            username = 'pipeline'          //The publisher user name
+            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'       //The publisher password
+
+        }
+        defaults {
+            publications('artifacts')
+            publishArtifacts = true
+            // Properties to be attached to the published artifacts.
+            properties = ['qa.level': 'basic', 'dev.team': 'core']
+            publishPom = true // Publish generated POM files to Artifactory (true by default)
+            publishIvy = true // Publish generated Ivy descriptor files to Artifactory (true by default)
+        }
+    }
+    resolve {
+        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the resolver
+        repository {
+            repoKey = 'libs-releases-local'  //The Artifactory (preferably virtual) repository key to resolve from
+            username = 'pipeline'       //Optional resolver user name (leave out to use anonymous resolution)
+            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'   //The resolver password
+            maven = true                //Resolve Maven-style artifacts and descriptors (true by default)
+        }
+    }
+    // Redefine basic properties of the build info object
+    clientConfig.setIncludeEnvVars(true)
+    clientConfig.info.addEnvironmentProperty('cassandra.storagedir', "/tmp/cassandra")
+    clientConfig.info.setBuildName('CqlMigrate to Artifactory')
+    clientConfig.info.setBuildNumber('' + new java.util.Random(System.currentTimeMillis()).nextInt(20000))
+    clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+}
+
+artifactoryPublish {
+    skip = false //Skip build info analysis and publishing (false by default)
 }
