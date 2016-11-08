@@ -1,1 +1,5 @@
 rootProject.name = 'cqlmigrate'
+include 'cql'
+include 'test3x'
+include 'test2x'
+

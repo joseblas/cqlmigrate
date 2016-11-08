@@ -50,19 +50,66 @@ clean.doFirst {
 //    }
 //}
 
-publishing {
-    publications {
-        artifacts(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
+
+
+subprojects {
+    apply plugin: "java"
+
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        compile 'com.datastax.cassandra:cassandra-driver-core:3.1.0'
+        compile 'org.slf4j:slf4j-api:1.7.12'
+        compile 'com.google.code.findbugs:jsr305:3.0.0'
+
+        testCompile 'org.apache.logging.log4j:log4j-core:2.2'
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.assertj:assertj-core:2.0.0'
+        testCompile 'org.assertj:assertj-joda-time:2.0.0'
+        testCompile 'joda-time:joda-time:2.9.4'
+        testCompile 'org.hamcrest:hamcrest-all:1.3'
+        testCompile 'org.mockito:mockito-core:1.10.19'
+        testCompile 'org.powermock:powermock-api-mockito:1.6.5'
+        testCompile 'org.powermock:powermock-module-junit4:1.6.5'
+
+        testCompile 'org.scassandra:java-client:1.0.3'
+        testCompile 'org.slf4j:slf4j-simple:1.7.12'
+//    testCompileAndFunctional 'org.cassandraunit:cassandra-unit-shaded:2.1.9.2'
+//        testCompileAndFunctional 'org.cassandraunit:cassandra-unit:3.0.0.1'
+
+    }
+
+    idea {
+        module {
+            downloadSources = true
         }
     }
+
+
+    jar {
+        manifest {
+            attributes "Main-Class": "uk.sky.cqlmigrate.CqlMigratorImpl"
+        }
+    }
+
+    task functional(dependsOn: ['testJar']) << {
+        exec {
+            executable = 'java'
+            args = ['-jar', testJar.archivePath, 'migrateSchema']
+        }
+    }
+
+
+    check.dependsOn(functional)
+
 }
 
-repositories {
-    mavenCentral()
-}
+
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.11'
@@ -74,33 +121,29 @@ configurations {
     testCompile.extendsFrom testCompileAndFunctional
 }
 
-dependencies {
-    compile 'com.datastax.cassandra:cassandra-driver-core:3.1.0'
-    compile 'org.slf4j:slf4j-api:1.7.12'
-    compile 'com.google.code.findbugs:jsr305:3.0.0'
-
-    testCompile 'org.apache.logging.log4j:log4j-core:2.2'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.assertj:assertj-core:2.0.0'
-    testCompile 'org.assertj:assertj-joda-time:2.0.0'
-    testCompile 'joda-time:joda-time:2.9.4'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-    testCompile 'org.mockito:mockito-core:1.10.19'
-    testCompile 'org.powermock:powermock-api-mockito:1.6.5'
-    testCompile 'org.powermock:powermock-module-junit4:1.6.5'
-
-    testCompile 'org.scassandra:java-client:1.0.3'
+//dependencies {
+//    compile 'com.datastax.cassandra:cassandra-driver-core:3.1.0'
+//    compile 'org.slf4j:slf4j-api:1.7.12'
+//    compile 'com.google.code.findbugs:jsr305:3.0.0'
+//
+//    testCompile 'org.apache.logging.log4j:log4j-core:2.2'
+//    testCompile 'junit:junit:4.12'
+//    testCompile 'org.assertj:assertj-core:2.0.0'
+//    testCompile 'org.assertj:assertj-joda-time:2.0.0'
+//    testCompile 'joda-time:joda-time:2.9.4'
+//    testCompile 'org.hamcrest:hamcrest-all:1.3'
+//    testCompile 'org.mockito:mockito-core:1.10.19'
+//    testCompile 'org.powermock:powermock-api-mockito:1.6.5'
+//    testCompile 'org.powermock:powermock-module-junit4:1.6.5'
+//
+//    testCompile 'org.scassandra:java-client:1.0.3'
 
 //    testCompileAndFunctional 'org.cassandraunit:cassandra-unit-shaded:2.1.9.2'
-    testCompileAndFunctional 'org.cassandraunit:cassandra-unit:3.0.0.1'
-    functional 'org.slf4j:slf4j-simple:1.7.12'
-}
+//    testCompileAndFunctional 'org.cassandraunit:cassandra-unit:3.0.0.1'
+//    functional 'org.slf4j:slf4j-simple:1.7.12'
+//}
 
-idea {
-    module {
-        downloadSources = true
-    }
-}
+
 
 task sourcesJar(type: Jar) {
     classifier = 'sources'
@@ -125,71 +168,61 @@ task testJar(type: Jar) {
     }
 }
 
-jar {
-    manifest {
-        attributes "Main-Class": "uk.sky.cqlmigrate.CqlMigratorImpl"
-    }
-}
+
 
 // Functional test is to run the migrateSchema on a jar containing embedded CQL files and have it return successfully.
-task functional(dependsOn: ['testJar']) << {
-    exec {
-        executable = 'java'
-        args = ['-jar', testJar.archivePath, 'migrateSchema']
-    }
-}
+//task functional(dependsOn: ['testJar']) << {
+//    exec {
+//        executable = 'java'
+//        args = ['-jar', testJar.archivePath, 'migrateSchema']
+//    }
+//}
+//
+//
+//check.dependsOn(functional)
 
-task functional3(dependsOn: ['testJar']) << {
-    exec {
-        executable = 'java'
-        args = ['-jar', testJar.archivePath, 'migrateSchema']
-    }
-}
+//test {
+//    jvmArgs '-Dcassandra.storagedir=/tmp/cassandra'
+//}
 
-check.dependsOn(functional)
-
-test {
-    jvmArgs '-Dcassandra.storagedir=/tmp/cassandra'
-}
-
-artifactory {
-    contextUrl = 'http://repo.sns.sky.com:8081/artifactory'
-    //The base Artifactory URL if not overridden by the publisher/resolver
-    publish {
-        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the publisher
-        //A closure defining publishing information
-        repository {
-            repoKey = 'libs-releases-local'   //The Artifactory repository key to publish to
-            username = 'pipeline'          //The publisher user name
-            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'       //The publisher password
-
-        }
-        defaults {
-            publications('artifacts')
-            publishArtifacts = true
-            // Properties to be attached to the published artifacts.
-            properties = ['qa.level': 'basic', 'dev.team': 'core']
-            publishPom = true // Publish generated POM files to Artifactory (true by default)
-            publishIvy = true // Publish generated Ivy descriptor files to Artifactory (true by default)
-        }
-    }
-    resolve {
-        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the resolver
-        repository {
-            repoKey = 'libs-releases-local'  //The Artifactory (preferably virtual) repository key to resolve from
-            username = 'pipeline'       //Optional resolver user name (leave out to use anonymous resolution)
-            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'   //The resolver password
-            maven = true                //Resolve Maven-style artifacts and descriptors (true by default)
-        }
-    }
-    // Redefine basic properties of the build info object
-    clientConfig.setIncludeEnvVars(true)
-    clientConfig.info.addEnvironmentProperty('cassandra.storagedir', "/tmp/cassandra")
-    clientConfig.info.setBuildName('CqlMigrate to Artifactory')
-    clientConfig.info.setBuildNumber('' + new java.util.Random(System.currentTimeMillis()).nextInt(20000))
-    clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
-}
-
-artifactoryPublish {
-    skip = false //Skip build info analysis and publishing (false by default)
-}
+//artifactory {
+//    contextUrl = 'http://repo.sns.sky.com:8081/artifactory'
+//    //The base Artifactory URL if not overridden by the publisher/resolver
+//    publish {
+//        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the publisher
+//        //A closure defining publishing information
+//        repository {
+//            repoKey = 'libs-releases-local'   //The Artifactory repository key to publish to
+//            username = 'pipeline'          //The publisher user name
+//            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'       //The publisher password
+//
+//        }
+//        defaults {
+//            publications('artifacts')
+//            publishArtifacts = true
+//            // Properties to be attached to the published artifacts.
+//            properties = ['qa.level': 'basic', 'dev.team': 'core']
+//            publishPom = true // Publish generated POM files to Artifactory (true by default)
+//            publishIvy = true // Publish generated Ivy descriptor files to Artifactory (true by default)
+//        }
+//    }
+//    resolve {
+//        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the resolver
+//        repository {
+//            repoKey = 'libs-releases-local'  //The Artifactory (preferably virtual) repository key to resolve from
+//            username = 'pipeline'       //Optional resolver user name (leave out to use anonymous resolution)
+//            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'   //The resolver password
+//            maven = true                //Resolve Maven-style artifacts and descriptors (true by default)
+//        }
+//    }
+//    // Redefine basic properties of the build info object
+//    clientConfig.setIncludeEnvVars(true)
+//    clientConfig.info.addEnvironmentProperty('cassandra.storagedir', "/tmp/cassandra")
+//    clientConfig.info.setBuildName('CqlMigrate to Artifactory')
+//    clientConfig.info.setBuildNumber('' + new java.util.Random(System.currentTimeMillis()).nextInt(20000))
+//    clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+//}
+//
+//artifactoryPublish {
+//    skip = false //Skip build info analysis and publishing (false by default)
+//}

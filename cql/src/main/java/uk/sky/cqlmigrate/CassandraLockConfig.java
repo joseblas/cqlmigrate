@@ -12,7 +12,7 @@ public class CassandraLockConfig extends LockConfig {
         return new CassandraLockConfigBuilder();
     }
 
-    public static class CassandraLockConfigBuilder extends LockConfig.LockConfigBuilder {
+    public static class CassandraLockConfigBuilder extends LockConfigBuilder {
 
         private CassandraLockConfigBuilder() {}
 

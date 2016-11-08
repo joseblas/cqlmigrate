@@ -1,0 +1,10 @@
+group 'uk.sky'
+version '3.0.0'
+
+apply plugin: 'java'
+
+dependencies{
+    compile project(':cql')
+    testCompile 'org.cassandraunit:cassandra-unit-shaded:2.1.9.2'
+}
+
