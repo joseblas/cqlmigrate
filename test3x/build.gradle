@@ -1,0 +1,22 @@
+group 'uk.sky'
+version '3.0.0'
+
+apply plugin: 'java'
+
+dependencies{
+    compile project(':cql')
+    testCompile 'org.cassandraunit:cassandra-unit:3.0.0.1'
+}
+
+
+sourceSets {
+    test {
+        java.srcDir file('../test2x/src/main/java')
+        resources.srcDir file('src/test/java')
+    }
+}
+
+test {
+
+    jvmArgs '-Dcassandra.storagedir=/tmp/cassandra'
+}

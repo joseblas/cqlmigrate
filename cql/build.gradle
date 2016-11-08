@@ -1,0 +1,58 @@
+group 'uk.sky'
+version '3.0.0'
+
+apply plugin: 'java'
+
+
+//publishing {
+//    publications {
+//        artifacts(MavenPublication) {
+//            from components.java
+//            artifact sourcesJar
+//            artifact javadocJar
+//        }
+//    }
+//}
+/*
+artifactory {
+    contextUrl = 'http://repo.sns.sky.com:8081/artifactory'
+    //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the publisher
+        //A closure defining publishing information
+        repository {
+            repoKey = 'libs-releases-local'   //The Artifactory repository key to publish to
+            username = 'pipeline'          //The publisher user name
+            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'       //The publisher password
+
+        }
+        defaults {
+            publications('artifacts')
+            publishArtifacts = true
+            // Properties to be attached to the published artifacts.
+            properties = ['qa.level': 'basic', 'dev.team': 'core']
+            publishPom = true // Publish generated POM files to Artifactory (true by default)
+            publishIvy = true // Publish generated Ivy descriptor files to Artifactory (true by default)
+        }
+    }
+    resolve {
+        contextUrl = 'http://repo.sns.sky.com:8081/artifactory'   //The base Artifactory URL for the resolver
+        repository {
+            repoKey = 'libs-releases-local'  //The Artifactory (preferably virtual) repository key to resolve from
+            username = 'pipeline'       //Optional resolver user name (leave out to use anonymous resolution)
+            password = 'AP4wqWC3Ppdaf7WRkNrZZBhdMfT'   //The resolver password
+            maven = true                //Resolve Maven-style artifacts and descriptors (true by default)
+        }
+    }
+    // Redefine basic properties of the build info object
+    clientConfig.setIncludeEnvVars(true)
+    clientConfig.info.addEnvironmentProperty('cassandra.storagedir', "/tmp/cassandra")
+    clientConfig.info.setBuildName('CqlMigrate to Artifactory')
+    clientConfig.info.setBuildNumber('' + new java.util.Random(System.currentTimeMillis()).nextInt(20000))
+    clientConfig.timeout = 600 // Artifactory connection timeout (in seconds). The default timeout is 300 seconds.
+}
+
+artifactoryPublish {
+    skip = false //Skip build info analysis and publishing (false by default)
+}
+*/
